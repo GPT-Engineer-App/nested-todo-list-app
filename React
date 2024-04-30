@@ -1,0 +1,111 @@
+import { Box, Button, Checkbox, Flex, Icon, Input, ListItem, OrderedList, Text, useDisclosure } from "@chakra-ui/react";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { useState } from "react";
+
+const initialTodos = [
+  {
+    id: 1,
+    text: "Buy groceries",
+    checked: false,
+    children: [
+      { id: 2, text: "Milk", checked: false },
+      { id: 3, text: "Bread", checked: false },
+    ],
+  },
+  {
+    id: 4,
+    text: "Do laundry",
+    checked: false,
+    children: [
+      { id: 5, text: "Wash", checked: false },
+      { id: 6, text: "Dry", checked: false },
+    ],
+  },
+];
+
+const Index = () => {
+  const [todos, setTodos] = useState(initialTodos);
+  const [newTodo, setNewTodo] = useState("");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleToggle = (id) => {
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, checked: !todo.checked };
+        } else if (todo.children) {
+          return {
+            ...todo,
+            children: todo.children.map((child) => {
+              if (child.id === id) {
+                return { ...child, checked: !child.checked };
+              }
+              return child;
+            }),
+          };
+        }
+        return todo;
+      });
+    });
+  };
+
+  const handleAdd = (parentId) => {
+    const newId = Math.max(...todos.map((todo) => todo.id)) + 1;
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === parentId) {
+          return { ...todo, children: [...(todo.children || []), { id: newId, text: newTodo, checked: false }] };
+        }
+        return todo;
+      });
+    });
+    setNewTodo("");
+  };
+
+  const handleDelete = (id) => {
+    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+  };
+
+  const handleEdit = (id, text) => {
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, text };
+        }
+        return todo;
+      });
+    });
+  };
+
+  return (
+    <Box p={4}>
+      <Input value={newTodo} onChange={(e) => setNewTodo(e.target.value)} placeholder="Add new todo" mb={4} />
+      <Button onClick={() => handleAdd(null)}>Add</Button>
+      <OrderedList>
+        {todos.map((todo) => (
+          <ListItem key={todo.id}>
+            <Checkbox isChecked={todo.checked} onChange={() => handleToggle(todo.id)} />
+            <Text ml={2}>{todo.text}</Text>
+            <Icon as={FaEdit} ml={2} cursor="pointer" onClick={() => onOpen()} />
+            <Icon as={FaTrash} ml={2} cursor="pointer" onClick={() => handleDelete(todo.id)} />
+            {todo.children && (
+              <OrderedList>
+                {todo.children.map((child) => (
+                  <ListItem key={child.id}>
+                    <Checkbox isChecked={child.checked} onChange={() => handleToggle(child.id)} />
+                    <Text ml={2}>{child.text}</Text>
+                    <Icon as={FaEdit} ml={2} cursor="pointer" onClick={() => onOpen()} />
+                    <Icon as={FaTrash} ml={2} cursor="pointer" onClick={() => handleDelete(child.id)} />
+                  </ListItem>
+                ))}
+              </OrderedList>
+            )}
+            <Button onClick={() => handleAdd(todo.id)}>Add subtask</Button>
+          </ListItem>
+        ))}
+      </OrderedList>
+    </Box>
+  );
+};
+
+export default Index;
